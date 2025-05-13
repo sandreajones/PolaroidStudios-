@@ -1,0 +1,139 @@
+from zipfile import ZipFile
+import os
+
+# Directory structure for the React project
+base_dir = "/mnt/data/polaroid-shop"
+src_dir = os.path.join(base_dir, "src")
+public_dir = os.path.join(base_dir, "public", "images")
+os.makedirs(src_dir, exist_ok=True)
+os.makedirs(public_dir, exist_ok=True)
+
+# Create placeholder image files
+image_names = [
+    "kodak.jpg", "instax-camera.jpg", "instax-film.jpg", "polaroid-film.jpg",
+    "stickers.jpg", "polaroid-camera.jpg", "case.jpg", "digital-pack.jpg"
+]
+for image in image_names:
+    with open(os.path.join(public_dir, image), "wb") as f:
+        f.write(b"")  # Empty file placeholders
+
+# Create the main React component (Shop.js)
+shop_js = """
+import { useState } from "react";
+import { Button } from "./Button";
+
+const products = [
+  { id: 1, name: "Kodak PixPro 45", price: 130, category: "Camera", image: "/images/kodak.jpg" },
+  { id: 2, name: "Instax Fujifilm Camera", price: 110, category: "Camera", image: "/images/instax-camera.jpg" },
+  { id: 3, name: "Instax Film (Twin Pack)", price: 20, category: "Film", image: "/images/instax-film.jpg" },
+  { id: 4, name: "Polaroid Film", price: 15, category: "Film", image: "/images/polaroid-film.jpg" },
+  { id: 5, name: "Film Stickers", price: 5, category: "Stickers", image: "/images/stickers.jpg" },
+  { id: 6, name: "Polaroid Camera", price: 120, category: "Camera", image: "/images/polaroid-camera.jpg" },
+  { id: 7, name: "Camera Case", price: 25, category: "Accessories", image: "/images/case.jpg" },
+  { id: 8, name: "Digital Print Pack", price: 10, category: "Digital", image: "/images/digital-pack.jpg" },
+];
+
+export default function Shop() {
+  const [cart, setCart] = useState([]);
+
+  const addToCart = (product) => {
+    setCart((prev) => [...prev, product]);
+  };
+
+  const total = cart.reduce((sum, item) => sum + item.price, 0);
+
+  return (
+    <div className="p-6 max-w-6xl mx-auto">
+      <h1 className="text-3xl font-bold mb-6">Polaroid Shop</h1>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mb-10">
+        {products.map((product) => (
+          <div key={product.id} className="border rounded-2xl p-4 shadow">
+            <img
+              src={product.image}
+              alt={product.name}
+              className="w-full h-48 object-cover rounded-xl mb-2"
+            />
+            <h2 className="text-xl font-semibold">{product.name}</h2>
+            <p className="text-gray-600">${product.price.toFixed(2)}</p>
+            <Button className="mt-2" onClick={() => addToCart(product)}>
+              Add to Cart
+            </Button>
+          </div>
+        ))}
+      </div>
+
+      <div className="border-t pt-4">
+        <h2 className="text-2xl font-bold mb-2">Your Cart</h2>
+        {cart.length === 0 ? (
+          <p className="text-gray-500">Your cart is empty.</p>
+        ) : (
+          <ul className="mb-2">
+            {cart.map((item, index) => (
+              <li key={index} className="text-gray-800">
+                {item.name} - ${item.price.toFixed(2)}
+              </li>
+            ))}
+          </ul>
+        )}
+        <p className="font-semibold">Total: ${total.toFixed(2)}</p>
+        <Button className="mt-2" disabled={cart.length === 0}>
+          Proceed to Checkout
+        </Button>
+      </div>
+    </div>
+  );
+}
+"""
+
+# Create supporting button component
+button_js = """
+export function Button({ children, onClick, className = "" }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700 ${className}`}
+    >
+      {children}
+    </button>
+  );
+}
+"""
+
+# Save component files
+with open(os.path.join(src_dir, "Shop.js"), "w") as f:
+    f.write(shop_js)
+with open(os.path.join(src_dir, "Button.js"), "w") as f:
+    f.write(button_js)
+
+# Create a basic package.json placeholder
+package_json = """
+{
+  "name": "polaroid-shop",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "vite"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0"
+  }
+}
+"""
+
+with open(os.path.join(base_dir, "package.json"), "w") as f:
+    f.write(package_json)
+
+# Create zip file
+zip_path = "/mnt/data/polaroid-shop.zip"
+with ZipFile(zip_path, "w") as zipf:
+    for foldername, subfolders, filenames in os.walk(base_dir):
+        for filename in filenames:
+            file_path = os.path.join(foldername, filename)
+            arcname = os.path.relpath(file_path, base_dir)
+            zipf.write(file_path, arcname)
+
+zip_path
